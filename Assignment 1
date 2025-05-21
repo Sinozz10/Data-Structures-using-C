@@ -1,1 +1,384 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <math.h>
+#include <ctype.h>
+#define SIZE 100
 
+typedef struct
+{
+    int items[SIZE];
+    int top;
+} Stack;
+
+Stack *inita();
+int isEmpty(Stack *);
+int issFull(Stack *);
+void push(Stack *, int);
+int pop(Stack *);
+int peek(Stack *);
+void display(Stack *);
+void reverseString(char *);
+int checkSorted(Stack *);
+void deletePrimeNumbers(Stack *);
+Stack *mergeSortedStacks(Stack *, Stack *);
+int checkParentheses(char *);
+void getUserInputString(char *, int);
+void inputStack(Stack *);
+
+int main()
+{
+    int choice;
+    char str[SIZE];
+    Stack *s = inita();
+    Stack *s1 = inita();
+    Stack *s2 = inita();
+    Stack *merged = NULL;
+    do
+    {
+        printf("\n-----------Main Menu-----------\n");
+        printf("1.Reverse a string\n2.Check if stack is sorted\n3.Delete prime numbers\n4.Merge two sorted stacks\n5.Check balanced parentheses\n0.Exit\n");
+        printf("Enter your choice:");
+        scanf("%d", &choice);
+        while (getchar() != '\n')
+            ;
+        switch (choice)
+        {
+        case 1:
+            getUserInputString(str, SIZE);
+            printf("Original string: %s\n", str);
+            reverseString(str);
+            printf("Reversed string: %s\n", str);
+            printf("--------------------------");
+            break;
+        case 2:
+            while (!isEmpty(s))
+                pop(s);
+            printf("Enter elements for stack (min on top)\n");
+            inputStack(s);
+            if (checkSorted(s))
+                printf("Stack is sorted (minimum on top)\n");
+            else
+                printf("Stack is not sorted\n");
+            break;
+        case 3:
+            while (!isEmpty(s))
+                pop(s);
+            printf("Enter elements for stack\n");
+            inputStack(s);
+            printf("Stack before deletion \n");
+            display(s);
+            printf("\n");
+            deletePrimeNumbers(s);
+            printf("Stack after deleting prime numbers\n");
+            display(s);
+            break;
+        case 4:
+            printf("Input for first sorted stack (min on top)\n");
+            inputStack(s1);
+            printf("Input for second sorted stack (min on top)\n");
+            inputStack(s2);
+            merged = mergeSortedStacks(s1, s2);
+            printf("First stack\n");
+            display(s1);
+            printf("\n");
+            printf("Second stack\n");
+            display(s2);
+            printf("\n");
+            printf("Merged stack\n");
+            display(merged);
+            printf("\n");
+            break;
+        case 5:
+            getUserInputString(str, SIZE);
+            if (checkParentheses(str))
+            {
+                printf("The string has balanced parentheses\n");
+            }
+            else
+            {
+                printf("The string has unbalanced parentheses\n");
+            }
+            break;
+        case 0:
+            printf("Exiting program,Goodbye\n");
+            break;
+        default:
+            printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 0);
+    free(s);
+    free(s1);
+    free(s2);
+    free(merged);
+    return 0;
+}
+
+Stack *inita()
+{
+    Stack *s = malloc(sizeof(Stack));
+    if (s == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+    s->top = -1;
+    return s;
+}
+
+int isEmpty(Stack *s)
+{
+    if (s->top == -1)
+        return 1;
+    else
+        return 0;
+}
+
+int issFull(Stack *s)
+{
+    if (s->top == SIZE - 1)
+        return 1;
+    else
+        return 0;
+}
+
+void push(Stack *s, int x)
+{
+    if (issFull(s))
+    {
+        printf("Stack Overflow\n");
+        return;
+    }
+    s->items[++(s->top)] = x;
+}
+
+int pop(Stack *s)
+{
+    if (isEmpty(s))
+    {
+        printf("Stack is empty\n");
+        return -1;
+    }
+    return s->items[(s->top)--];
+}
+
+int peek(Stack *s)
+{
+    if (isEmpty(s))
+    {
+        printf("Stack is empty\n");
+        return -1;
+    }
+    return s->items[s->top];
+}
+
+void display(Stack *s)
+{
+    if (isEmpty(s))
+    {
+        printf("Stack is empty\n");
+        return;
+    }
+    printf("Stack elements: ");
+    Stack *temp = inita();
+    while (!isEmpty(s))
+    {
+        int item = pop(s);
+        printf("%d ", item);
+        push(temp, item);
+    }
+    while (!isEmpty(temp))
+    {
+        push(s, pop(temp));
+    }
+    free(temp);
+}
+
+void reverseString(char *str)
+{
+    int length = strlen(str);
+    Stack *s = inita();
+    for (int i = 0; i < length; i++)
+    {
+        push(s, str[i]);
+    }
+    for (int i = 0; i < length; i++)
+    {
+        str[i] = (char)pop(s);
+    }
+    free(s);
+}
+
+int checkSorted(Stack *s)
+{
+    if (isEmpty(s) || s->top == 0)
+    {
+        return 1;
+    }
+
+    int isSorted = 1;
+    Stack *temp = inita();
+    int prev = pop(s);
+    push(temp, prev);
+    while (!isEmpty(s))
+    {
+        int current = pop(s);
+        push(temp, current);
+        if (current < prev)
+        {
+            isSorted = 0;
+            break;
+        }
+        prev = current;
+    }
+    while (!isEmpty(temp))
+        push(s, pop(temp));
+    Stack *temp2 = inita();
+    while (!isEmpty(s))
+        push(temp2, pop(s));
+    while (!isEmpty(temp2))
+        push(s, pop(temp2));
+    free(temp);
+    free(temp2);
+    return isSorted;
+}
+
+int isPrime(int num)
+{
+    if (num <= 1)
+        return 0;
+    if (num <= 3)
+        return 1;
+    if (num % 2 == 0 || num % 3 == 0)
+        return 0;
+    for (int i = 5; i * i <= num; i += 6)
+    {
+        if (num % i == 0 || num % (i + 2) == 0)
+            return 0;
+    }
+    return 1;
+}
+
+void deletePrimeNumbers(Stack *s)
+{
+    Stack *temp = inita();
+    while (!isEmpty(s))
+    {
+        int item = pop(s);
+        if (!isPrime(item))
+        {
+            push(temp, item);
+        }
+    }
+    Stack *temp2 = inita();
+    while (!isEmpty(temp))
+    {
+        push(temp2, pop(temp));
+    }
+    while (!isEmpty(temp2))
+    {
+        push(s, pop(temp2));
+    }
+    free(temp);
+    free(temp2);
+}
+
+Stack *mergeSortedStacks(Stack *s1, Stack *s2)
+{
+    Stack *result = inita();
+    Stack *s1Copy = inita();
+    Stack *s2Copy = inita();
+    Stack *temp1 = inita();
+    Stack *temp2 = inita();
+    while (!isEmpty(s1))
+    {
+        push(temp1, pop(s1));
+    }
+    while (!isEmpty(temp1))
+    {
+        int value = pop(temp1);
+        push(s1, value);
+        push(s1Copy, value);
+    }
+    while (!isEmpty(s2))
+    {
+        push(temp2, pop(s2));
+    }
+    while (!isEmpty(temp2))
+    {
+        int value = pop(temp2);
+        push(s2, value);
+        push(s2Copy, value);
+    }
+    while (!isEmpty(s1Copy) && !isEmpty(s2Copy))
+    {
+        if (peek(s1Copy) <= peek(s2Copy))
+        {
+            push(result, pop(s1Copy));
+        }
+        else
+        {
+            push(result, pop(s2Copy));
+        }
+    }
+    while (!isEmpty(s1Copy))
+    {
+        push(result, pop(s1Copy));
+    }
+    while (!isEmpty(s2Copy))
+    {
+        push(result, pop(s2Copy));
+    }
+    free(temp1);
+    free(temp2);
+    free(s1Copy);
+    free(s2Copy);
+    return result;
+}
+
+int checkParentheses(char *str)
+{
+    Stack *s = inita();
+    for (int i = 0;i<strlen(str); i++)
+    {
+        if (str[i] == '(')
+        {
+            push(s, '(');
+        }
+        else if (str[i] == ')')
+        {
+            if (isEmpty(s))
+            {
+                free(s);
+                return 0;
+            }
+            pop(s);
+        }
+    }
+    int result = isEmpty(s);
+    free(s);
+    return result;
+}
+
+void getUserInputString(char *str, int maxLength)
+{
+    printf("Enter a string: ");
+    fgets(str, maxLength, stdin);
+    int len = strlen(str);
+    if (len > 0 && str[len - 1] == '\n')
+        str[len - 1] = '\0';
+}
+
+void inputStack(Stack *s)
+{
+    int n, num;
+    printf("Enter number of elements: ");
+    scanf("%d", &n);
+    printf("Enter elements (integers): ");
+    for (int i = 0; i < n; i++)
+    {
+        scanf("%d", &num);
+        push(s, num);
+    }
+}
